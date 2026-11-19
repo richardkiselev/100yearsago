@@ -1,0 +1,243 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="https://trmnl.com/css/latest/plugins.css">
+  <script src="https://trmnl.com/js/latest/plugins.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+  box-sizing: border-box;
+}
+
+.screen,
+.view--full {
+  overflow: hidden;
+}
+
+.layout {
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  padding: 10px 14px;
+}
+
+.columns,
+.column,
+.markdown {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.markdown {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 5px;
+}
+
+h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.4rem;
+  line-height: 1.08;
+  text-align: left;
+  margin: 0 0 7px 0;
+  flex-shrink: 0;
+}
+
+p {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.1;
+  text-align: left;
+  margin: 4px 0;
+  font-weight: bold;
+}
+
+span {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  text-align: left;
+}
+
+ul, ol {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.22;
+  text-align: left;
+  margin: 0 0 6px 0;
+  padding-left: 22px;
+}
+
+li {
+  margin-bottom: 3px;
+  overflow-wrap: anywhere;
+}
+
+.inline-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 3px 0;
+  flex-shrink: 0;
+}
+
+.inline-row p {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.inline-row span {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.title_bar {
+  flex-shrink: 0;
+}
+  </style>
+</head>
+
+<body class="environment trmnl">
+  <div class="screen">
+    <div class="view view--full">
+      <div class="layout">
+        <div class="columns">
+          <div class="column">
+            <div class="markdown">
+
+              <h1 id="historical-date">Loading...</h1>
+
+              <p>Stats:</p>
+              <ul>
+                <li id="world-population">Dow Jones Closes At: Loading...</li>
+                <li id="us-population">Temperature in Washington: Loading...</li>
+                <li id="world-gdp">Weather in Washington: Loading...</li>
+                <li id="us-gdp">NYT Headline: Loading...</li>
+              </ul>
+
+              <div class="inline-row">
+                <p>Born Today:</p>
+                <span id="birthdays">Loading...</span>
+              </div>
+
+              <p>Events:</p>
+              <ol>
+                <li id="world-event-1">WORLD: Loading...</li>
+                <li id="world-event-2">WORLD: Loading...</li>
+                <li id="world-event-3">WORLD: Loading...</li>
+                <li id="us-event-1">US: Loading...</li>
+                <li id="us-event-2">US: Loading...</li>
+              </ol>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="title_bar">
+        <img class="image" src="https://trmnl.com/images/plugins/trmnl--render.svg">
+        <span class="title">100 Years Ago | R. Kiselev</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const now = new Date();
+
+    const historicalDate = new Date(
+      now.getFullYear() - 100,
+      now.getMonth(),
+      now.getDate()
+    );
+
+    const formattedDate = historicalDate.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+
+    document.getElementById('historical-date').textContent =
+      "Today is " + formattedDate;
+
+    const key =
+      String(historicalDate.getMonth() + 1).padStart(2, '0') +
+      '-' +
+      String(historicalDate.getDate()).padStart(2, '0');
+
+    fetch("https://raw.githubusercontent.com/richardkiselev/100yearsago/refs/heads/main/history.json")
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Could not load history.json");
+        }
+        return response.json();
+      })
+      .then(data => {
+        const today = data[key];
+
+        if (!today) {
+          throw new Error("No historical data found for " + key);
+        }
+
+        document.getElementById('world-population').textContent =
+          "Dow Jones Closes At: " + (today.dow_jones || "N/A");
+
+        document.getElementById('us-population').textContent =
+          "Temperature in Washington: " + (today.washington_temp || "N/A");
+
+        document.getElementById('world-gdp').textContent =
+          "Weather in Washington: " + (today.washington_weather || "N/A");
+
+        document.getElementById('us-gdp').textContent =
+          "NYT Headline: " + (today.headline || "N/A");
+
+        document.getElementById('birthdays').textContent =
+          today.born_today?.join(", ") || "No recorded birthdays";
+
+        const worldEvents = today.events?.world || [];
+
+        for (let i = 0; i < 3; i++) {
+          document.getElementById(`world-event-${i + 1}`).textContent =
+            "WORLD: " + (worldEvents[i] || "No recorded event");
+        }
+
+        const usEvents = today.events?.us || [];
+
+        for (let i = 0; i < 2; i++) {
+          document.getElementById(`us-event-${i + 1}`).textContent =
+            "US: " + (usEvents[i] || "No recorded event");
+        }
+      })
+      .catch(error => { // in case json doesn't go through
+        console.error("Historical data error:", error);
+
+        document.getElementById('birthdays').textContent =
+          "Data unavailable";
+
+        document.getElementById('world-population').textContent =
+          "Dow Jones: Error";
+
+        document.getElementById('us-population').textContent =
+          "Temp: ERROR";
+
+        document.getElementById('world-gdp').textContent =
+          "Weather: ERROR";
+
+        document.getElementById('us-gdp').textContent =
+          "NYT Headline: ERROR";
+      });
+  </script>
+
+</body>
+</html>
